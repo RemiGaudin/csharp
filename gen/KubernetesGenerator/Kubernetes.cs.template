@@ -343,6 +343,7 @@ namespace k8s
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "{{path}}").ToString();
+            _url = _url.Replace("/apis//", "/api/");
             {{#operation.parameters}}
             {{#IfKindIs . "path"}}
             _url = _url.Replace("{{AddCurly name}}", {{GetDotNetName name}});
@@ -384,14 +385,14 @@ namespace k8s
 
             // Serialize Request
             string _requestContent = null;
-            {{#operation.requestBody.isRequired}}
+            {{#IfParamCotains operation "body"}}
             if(body != null)
             {
                 _requestContent = SafeJsonConvert.SerializeObject(body, SerializationSettings);
                 _httpRequest.Content = new StringContent(_requestContent, System.Text.Encoding.UTF8);
                 _httpRequest.Content.Headers.ContentType = GetHeader(body);
             }
-            {{/operation.requestBody.isRequired}}
+            {{/IfParamCotains operation "body"}}
             // Set Credentials
             if (Credentials != null)
             {
@@ -466,7 +467,7 @@ namespace k8s
                     }
                     throw new SerializationException("Unable to deserialize the response.", _responseContent, ex);
                 }
-                {{/IfReturnType operation "stream"}}
+                {{/IfReturnType operation "obj"}}
             }
             {{/IfReturnType operation "any"}}
             if (_shouldTrace)
